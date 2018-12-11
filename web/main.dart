@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'dart:html';
 import 'dart:math';
+import 'dart:typed_data';
+
+import 'cpu.dart';
+import 'assembler.dart';
 
 const int scale = 100;
-const int TICK = 1000; // 1000 milliseconds
+const int TICK = 1000; // milliseconds
 
 const Point NOP = const Point(0, 0);
 const Point LEFT = const Point(-1, 0);
@@ -11,13 +15,23 @@ const Point RIGHT = const Point(1, 0);
 const Point UP = const Point(0, -1);
 const Point DOWN = const Point(0, 1);
 
+class Computer {
+  Computer() {}
+
+  void Step() {
+    _cpu.Step();
+  }
+
+  CPU _cpu;
+}
+
 class Board {
   Board() {
     this._board = [
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 1, 1, 1, 1, 0, 1, 1, 1, 0],
       [0, 2, 2, 1, 1, 2, 2, 1, 1, 0],
-      [0, 1, 1, 1, 1, 2, 2, 1, 1, 0],
+      [0, 2, 2, 1, 1, 2, 2, 1, 1, 0],
       [0, 1, 1, 1, 1, 0, 1, 1, 1, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ];
@@ -48,7 +62,7 @@ class Board {
 
   // Get the value at a given position.
   int GetPosition(Point p) {
-    return _board[p.x][p.y];
+    return _board[p.y][p.x];
   }
 
   List<List<int>> _board;
@@ -119,10 +133,10 @@ class Program {
       return NOP;
     }
 
-    String cmd = commands[pc].toUpperCase();
+    List<String> line = commands[pc].toUpperCase().split(" ");
     pc += 1;
 
-    switch (cmd) {
+    switch (line[0]) {
       case "LEFT":
         return LEFT;
       case "RIGHT":
@@ -133,6 +147,9 @@ class Program {
         return DOWN;
       case "LOOP":
         pc = 0;
+        return NOP;
+      case "JUMP":
+        pc = int.parse(line[1]);
         return NOP;
     }
 
@@ -152,11 +169,11 @@ class Game {
     ctx = canvas.getContext('2d');
   }
 
-  Future run() async {
-    update(await window.animationFrame);
+  Future Run() async {
+    Update(await window.animationFrame);
   }
 
-  void update(num timestamp) {
+  void Update(num timestamp) {
     if (lastTick == 0) {
       lastTick = timestamp;
     } else if (timestamp - lastTick > TICK) {
@@ -165,8 +182,14 @@ class Game {
         finished = true;
       }
     }
+
     Render();
-    if (!finished) run();
+
+    if (!finished) Run();
+  }
+
+  void Stop() {
+    finished = true;
   }
 
   void Render() {
@@ -180,6 +203,7 @@ class Game {
     bot = new MopBot(board);
     bot.LoadProgram(program_);
     lastTick = 0;
+    finished = false;
   }
 
   Board board;
@@ -200,20 +224,47 @@ void main() {
   canvas.height = right_panel.clientHeight;
 
   TextAreaElement input = querySelector("#input");
+  TableSectionElement memory = querySelector("#memory table tbody");
 
   Game game = new Game(canvas);
   game.Render();
+
+  CPU cpu = CPU();
 
   // Resize the canvas and re-render when the window changes size.
   window.onResize.listen((e) {
     canvas.width = right_panel.clientWidth;
     canvas.height = right_panel.clientHeight;
+    game.Render();
   });
 
+  // Run the user input when they click execute.
   ButtonElement execute = querySelector("#execute");
   execute.onClick.listen((Event e) {
     game.SetProgram(input.value);
-    game.run();
+    game.Run();
+  });
+
+  ButtonElement terminate = querySelector("#terminate");
+  terminate.onClick.listen((Event e) {
+    game.Stop();
+  });
+
+  ButtonElement assemble = querySelector("#assemble");
+  assemble.onClick.listen((Event e) {
+    Uint16List result = Assemble(input.value);
+    memory.children.clear();
+    for (int i = 0; i < 100; i++) {
+      var row = memory.addRow();
+      row.addCell().text = i.toRadixString(16);
+      row.addCell().text = result[i].toRadixString(16);
+    }
+    cpu.LoadRam(result);
+  });
+
+  ButtonElement step = querySelector("#step");
+  step.onClick.listen((Event e) {
+    cpu.Step();
   });
 
 }

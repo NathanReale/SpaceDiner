@@ -8,20 +8,37 @@
     <meta name="scaffolded-by" content="https://github.com/google/stagehand">
     <title>SpaceDiner</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="favicon.ico">
+    <link rel="icon" href="favicon.jpg">
     <script defer src="main.dart.js"></script>
 </head>
 
 <body>
     <div id="left-panel">
-        <button id="execute">Execute</button>
-        <textarea id="input" style="width:100%;height:100%">
-Right
-Right
-Down
-Down
-Left
-Left</textarea>
+        <div id="buttons">
+            <button id="execute">Execute</button>
+            <button id="terminate">Terminate</button>
+            <button id="assemble">Assemble</button>
+            <button id="step">Step</button>
+        </div>
+        <div id="editor">
+            <textarea id="input">SET 5 A
+SET 7 B
+ADD B A
+JZE A loop
+:loop
+SUB 10 B</textarea>
+            <div id="memory">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Address</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memory_body"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
     <div id="right-panel">
         <canvas id="canvas"></canvas>

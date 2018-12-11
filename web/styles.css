@@ -8,6 +8,10 @@ html, body {
   font-family: 'Roboto', sans-serif;
 }
 
+table, th, td {
+  border: 1px solid black;
+}
+
 #input {
     font-size: 14px;
     font-family: Monaco, monospace;
@@ -22,6 +26,28 @@ html, body {
     width: 30%;
     height: 100%;
     float: left;
+}
+
+#editor {
+    width: 100%;
+    height: 100%;
+}
+
+#editor textarea {
+    width: 50%;
+    height: 100%;
+    box-sizing: border-box;
+    float: left;
+}
+#memory {
+    width: 50%;
+    height: 100%;
+    overflow: scroll;
+    float: left;
+}
+
+#memory table {
+    width: 100%;
 }
 
 #right-panel {
