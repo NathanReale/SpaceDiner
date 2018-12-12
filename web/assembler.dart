@@ -11,12 +11,18 @@ int ParseValue(String val, Map<String, int> labels) {
 
   // Indirect registers.
   if (val.startsWith("[") && val.endsWith("]")) {
-    int index = registers.indexOf(val.substring(1, val.length-1));
+    String newVal = val.substring(1, val.length-1);
+    int index = registers.indexOf(newVal);
     if (index != -1) return index + 0x8;
+
+    int literal = int.tryParse(newVal, radix:16);
+    if (literal != null) {
+      return 0x11;
+    }
   }
 
   // Literal value.
-  int literal = int.tryParse(val);
+  int literal = int.tryParse(val, radix:16);
   if (literal != null) {
     if (-1 <= literal && literal <= 0x1f) return literal + 0x20;
     return 0x10;
@@ -38,7 +44,7 @@ int ParseValue(String val, Map<String, int> labels) {
 }
 
 Uint16List Assemble(String program) {
-  Uint16List result = Uint16List(0x100);
+  Uint16List result = Uint16List(0x10000);
   int result_counter = 0;
 
   Map<String, int> labels = Map<String, int>();
@@ -100,7 +106,7 @@ Uint16List Assemble(String program) {
     result[result_counter++] = op_code + (a_value << 4) + (b_value << 10);
 
     if (b_value == 0x10) {
-      int res = int.tryParse(parts[1]);
+      int res = int.tryParse(parts[1], radix:16);
       if (res != null) {
         result[result_counter++] = res;
       } else {
@@ -111,9 +117,14 @@ Uint16List Assemble(String program) {
           pending_labels[result_counter++] = parts[1];
         }
       }
+    } else if (b_value == 0x11) {
+      int res = int.tryParse(parts[1].substring(1, parts[1].length-1), radix:16);
+      if (res != null) {
+        result[result_counter++] = res;
+      }
     }
     if (a_value == 0x10) {
-      int res = int.tryParse(parts[2]);
+      int res = int.tryParse(parts[2], radix:16);
       if (res != null) {
         result[result_counter++] = res;
       } else {
@@ -123,6 +134,11 @@ Uint16List Assemble(String program) {
           result[result_counter] = -1;
           pending_labels[result_counter++] = parts[2];
         }
+      }
+    } else if (a_value == 0x11) {
+      int res = int.tryParse(parts[2].substring(1, parts[2].length-1), radix:16);
+      if (res != null) {
+        result[result_counter++] = res;
       }
     }
   }

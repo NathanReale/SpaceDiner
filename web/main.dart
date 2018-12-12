@@ -3,7 +3,7 @@ import 'dart:html';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'cpu.dart';
+import 'computer.dart';
 import 'assembler.dart';
 
 const int scale = 100;
@@ -15,15 +15,7 @@ const Point RIGHT = const Point(1, 0);
 const Point UP = const Point(0, -1);
 const Point DOWN = const Point(0, 1);
 
-class Computer {
-  Computer() {}
 
-  void Step() {
-    _cpu.Step();
-  }
-
-  CPU _cpu;
-}
 
 class Board {
   Board() {
@@ -70,7 +62,8 @@ class Board {
 
 abstract class Bot {
   Bot(Board b) {
-    board = b;
+    _board = b;
+    _computer = Computer();
   }
 
   void Render(CanvasRenderingContext2D ctx);
@@ -78,20 +71,21 @@ abstract class Bot {
 
   Point Position() { return position; }
   void SetCrash(bool err) { crash = err; }
-  void LoadProgram(String prgm) {
-    program = new Program(prgm);
+  void LoadProgram(Uint16List prgm) {
+    _computer.LoadRam(prgm);
   }
 
   Point position;
   bool crash = false;
 
-  Board board;
-  Program program;
+  Board _board;
+  Computer _computer;
 }
 
 class MopBot extends Bot {
   MopBot(Board b) : super(b) {
     position = new Point(1, 1);
+    _computer.RegisterHardware(MotorHardware(0xFFFF, (Point p) => _move = p));
   }
 
   void Render(CanvasRenderingContext2D ctx) {
@@ -107,12 +101,16 @@ class MopBot extends Bot {
   }
 
   bool Step() {
-    Point newPosition = position + program.Step();
-    if (board.GetPosition(newPosition) == 0) {
-      SetCrash(true);
-      return false;
-    } else {
-      position = newPosition;
+    _computer.Step();
+    if (_move != null) {
+      Point newPosition = position + _move;
+      if (_board.GetPosition(newPosition) == 0) {
+        SetCrash(true);
+        return false;
+      } else {
+        position = newPosition;
+      }
+      _move = null;
     }
     return true;
   }
@@ -121,43 +119,8 @@ class MopBot extends Bot {
     position = position + p;
   }
 
-}
+  Point _move = null;
 
-class Program {
-  Program(String program) {
-    commands = program.split("\n");
-  }
-
-  Point Step() {
-    if (pc >= commands.length) {
-      return NOP;
-    }
-
-    List<String> line = commands[pc].toUpperCase().split(" ");
-    pc += 1;
-
-    switch (line[0]) {
-      case "LEFT":
-        return LEFT;
-      case "RIGHT":
-        return RIGHT;
-      case "UP":
-        return UP;
-      case "DOWN":
-        return DOWN;
-      case "LOOP":
-        pc = 0;
-        return NOP;
-      case "JUMP":
-        pc = int.parse(line[1]);
-        return NOP;
-    }
-
-    return NOP;
-  }
-
-  int pc = 0;
-  List<String> commands;
 }
 
 class Game {
@@ -188,6 +151,14 @@ class Game {
     if (!finished) Run();
   }
 
+  void Step() {
+    if (!bot.Step()) {
+      finished = true;
+    }
+
+    Render();
+  }
+
   void Stop() {
     finished = true;
   }
@@ -199,7 +170,7 @@ class Game {
 
   }
 
-  void SetProgram(String program_) {
+  void SetProgram(Uint16List program_) {
     bot = new MopBot(board);
     bot.LoadProgram(program_);
     lastTick = 0;
@@ -229,8 +200,6 @@ void main() {
   Game game = new Game(canvas);
   game.Render();
 
-  CPU cpu = CPU();
-
   // Resize the canvas and re-render when the window changes size.
   window.onResize.listen((e) {
     canvas.width = right_panel.clientWidth;
@@ -241,7 +210,6 @@ void main() {
   // Run the user input when they click execute.
   ButtonElement execute = querySelector("#execute");
   execute.onClick.listen((Event e) {
-    game.SetProgram(input.value);
     game.Run();
   });
 
@@ -259,12 +227,12 @@ void main() {
       row.addCell().text = i.toRadixString(16);
       row.addCell().text = result[i].toRadixString(16);
     }
-    cpu.LoadRam(result);
+    game.SetProgram(result);
   });
 
   ButtonElement step = querySelector("#step");
   step.onClick.listen((Event e) {
-    cpu.Step();
+    game.Step();
   });
 
 }

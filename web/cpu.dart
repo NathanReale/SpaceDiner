@@ -43,6 +43,7 @@ class CPU {
   }
 
   void SetValue(int op, int value) {
+    // TODO: Constrain value.
     switch (op) {
       case 0x0:
         a = value;
@@ -73,6 +74,9 @@ class CPU {
         break;
       case 0xd:
         ram[pc] = value;
+        break;
+      case 0x11:
+        ram[ram[pc-1]] = value;
         break;
       default:
         print("Error setting value: $op");
