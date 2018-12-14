@@ -3,7 +3,6 @@ import 'dart:typed_data';
 class CPU {
 
   CPU() {
-    pc = 0x0;
     ram = new Uint16List(0x10000);
   }
 
@@ -20,30 +19,39 @@ class CPU {
       case 0x2:
         return c;
       case 0x3:
-        return h;
-      case 0x4:
         return pc;
-      case 0x9:
+      case 0x4:
+        return sp;
+      case 0x8:
         return ram[a];
-      case 0xa:
+      case 0x9:
         return ram[b];
-      case 0xb:
+      case 0xa:
         return ram[c];
-      case 0xc:
-        return ram[h];
-      case 0xd:
+      case 0xb:
         return ram[pc];
+      case 0xc:
+        return ram[sp];
+      case 0x10: // next word
+        return ram[pc++];
+      case 0x11: // [next word]
+        return ram[ram[pc++]];
+      case 0x12: // POP
+        return ram[sp++];
+      case 0x13: // PEAK
+        return ram[sp];
     }
 
-    if (op == 0x10) return ram[pc++];
-    if (op == 0x11) return ram[ram[pc++]];
     if (op >= 0x1f) return op - 0x20;
 
     return -1;
   }
 
   void SetValue(int op, int value) {
-    // TODO: Constrain value.
+    // Make sure the value is within the 16 bit limits.
+    while (value < 0) value += 0x10000;
+    value = value % 0x10000;
+
     switch (op) {
       case 0x0:
         a = value;
@@ -55,28 +63,31 @@ class CPU {
         c = value;
         break;
       case 0x3:
-        h = value;
-        break;
-      case 0x4:
         pc = value;
         break;
-      case 0x9:
+      case 0x4:
+        sp = value;
+        break;
+      case 0x8:
         ram[a] = value;
         break;
-      case 0xa:
+      case 0x9:
         ram[b] = value;
         break;
-      case 0xb:
+      case 0xa:
         ram[c] = value;
         break;
-      case 0xc:
-        ram[h] = value;
-        break;
-      case 0xd:
+      case 0xb:
         ram[pc] = value;
         break;
+      case 0xc:
+        ram[sp] = value;
+        break;
       case 0x11:
-        ram[ram[pc-1]] = value;
+        ram[ram[pc++]] = value;
+        break;
+      case 0x12: // PUSH
+        ram[--sp] = value;
         break;
       default:
         print("Error setting value: $op");
@@ -94,7 +105,6 @@ class CPU {
     int a_op = (cmd & 0x3F0) >> 4;
 
     int b_value = GetValue(b_op);
-    int a_value = GetValue(a_op);
 
     switch (op) {
       case 0x0: // NOP
@@ -103,35 +113,49 @@ class CPU {
         SetValue(a_op, b_value);
         break;
       case 0x2: // ADD
+        int a_value = GetValue(a_op);
         SetValue(a_op, a_value + b_value);
         break;
       case 0x3: // SUB
+        int a_value = GetValue(a_op);
         SetValue(a_op, a_value - b_value);
         break;
       case 0x8: // JZE
+        int a_value = GetValue(a_op);
         if (b_value == 0) {
           pc = a_value;
         }
         break;
       case 0x9: // JNZ
+        int a_value = GetValue(a_op);
         if (b_value != 0) {
           pc = a_value;
         }
+        break;
+      case 0xF: // JSR
+        ram[--sp] = pc;
+        pc = b_value;
         break;
 
       default:
         print("Unimplemented command: $op");
     }
 
-    print("After step: A=$a B=$b C=$c H=$h PC=$pc");
+    print("After step: A=$a B=$b C=$c PC=$pc SP=$sp");
+  }
+
+  void Reset() {
+    pc = 0;
+    sp = 0xFFFF;
+    a = b = c  = 0;
   }
 
   // Registers
-  int pc;
-  int a;
-  int b;
-  int c;
-  int h;
+  int pc = 0;
+  int sp = 0xFFFF;
+  int a = 0;
+  int b = 0;
+  int c = 0;
 
   // Ram
   Uint16List ram;

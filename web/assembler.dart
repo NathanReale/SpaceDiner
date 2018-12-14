@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 RegExp label_exp = RegExp(r"^[a-zA-Z]+$");
-const List<String> registers = ["A", "B", "C", "H", "PC"];
+const List<String> registers = ["A", "B", "C", "PC", "SP"];
 
 int ParseValue(String val, Map<String, int> labels) {
 
@@ -19,6 +19,15 @@ int ParseValue(String val, Map<String, int> labels) {
     if (literal != null) {
       return 0x11;
     }
+  }
+
+  switch (val) {
+    case "PUSH":
+      return 0x12;
+    case "POP":
+      return 0x12;
+    case "PEAK":
+      return 0x13;
   }
 
   // Literal value.
@@ -57,6 +66,8 @@ Uint16List Assemble(String program) {
     if (lines[i].startsWith(";")) continue;
 
     List<String> parts = lines[i].split(new RegExp(r"\s+"));
+    if (parts.length == 0) continue;
+
     String cmd = parts[0].toLowerCase();
 
     // Keep track of labels.
@@ -65,7 +76,7 @@ Uint16List Assemble(String program) {
       continue;
     }
 
-    if (parts.length < 3) {
+    if (parts.length < 2) {
       print("Arguments missing on line $i");
       continue;
     }
@@ -73,6 +84,8 @@ Uint16List Assemble(String program) {
     int op_code = 0;
     int a_value = 0;
     int b_value = 0;
+
+    bool has_a = true;
 
     switch (cmd) {
       case "set":
@@ -90,13 +103,17 @@ Uint16List Assemble(String program) {
       case "jnz":
         op_code = 0x09;
         break;
+      case "jsr":
+        op_code = 0x0F;
+        has_a = false;
+        break;
       default:
         print("Unknown operation on line $i: $cmd");
         continue;
     }
 
     b_value = ParseValue(parts[1], labels);
-    a_value = ParseValue(parts[2], labels);
+    if (has_a) a_value = ParseValue(parts[2], labels);
 
     if (a_value == -1 || b_value == -1) {
       print("Error parsing arguments on line $i");
