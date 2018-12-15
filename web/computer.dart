@@ -35,7 +35,10 @@ class Computer {
     for (Hardware h in _hardware) {
       h.Reset();
     }
+  }
 
+  void Render() {
+    _cpu.Render();
   }
 
   CPU _cpu;

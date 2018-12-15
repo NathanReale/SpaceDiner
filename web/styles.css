@@ -55,3 +55,7 @@ table, th, td {
     height: 100%;
     float: left;
 }
+
+.active {
+background-color: red;
+}

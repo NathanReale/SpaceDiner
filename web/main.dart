@@ -93,6 +93,7 @@ class MopBot extends Bot {
   }
 
   void Render(CanvasRenderingContext2D ctx) {
+    // Draw the bot on the canvas.
     if (crash) {
       ctx.setFillColorRgb(255, 0, 0);
     } else {
@@ -102,6 +103,9 @@ class MopBot extends Bot {
         ..arc(position.x*scale + (scale / 2), position.y*scale + (scale / 2),
             scale / 2, 0, 2*pi)
         ..fill();
+
+    // Update registers table.
+    _computer.Render();
   }
 
   bool Step() {
@@ -205,7 +209,7 @@ void main() {
   canvas.height = right_panel.clientHeight;
 
   TextAreaElement input = querySelector("#input");
-  TableSectionElement memory = querySelector("#memory table tbody");
+  TableSectionElement memory = querySelector("table#ram tbody");
 
   if (window.localStorage.containsKey('program')) {
     input.value = window.localStorage['program'];
@@ -236,13 +240,8 @@ void main() {
   assemble.onClick.listen((Event e) {
     window.localStorage['program'] = input.value;
     Uint16List result = Assemble(input.value);
-    memory.children.clear();
-    for (int i = 0; i < 100; i++) {
-      var row = memory.addRow();
-      row.addCell().text = i.toRadixString(16);
-      row.addCell().text = result[i].toRadixString(16);
-    }
     game.SetProgram(result);
+    game.Render();
   });
 
   ButtonElement step = querySelector("#step");
