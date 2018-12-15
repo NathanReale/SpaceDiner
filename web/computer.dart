@@ -97,3 +97,39 @@ class MotorHardware extends Hardware {
   Function _move;
   int _pending_move = 0;
 }
+
+class MopHardware extends Hardware {
+  MopHardware(Function clean) {
+    _clean = clean;
+  }
+
+  void Step() {
+    if (_pending_move > 0) {
+      _pending_move--;
+      if (_pending_move == 0) {
+        _cpu.ram[_address+1] = 0x0000;
+      } else {
+        return;
+      }
+    }
+
+    int val = _cpu.ram[_address];
+    _cpu.ram[_address] = 0x0000;
+
+    if (val & 0x1 > 0) { // Clean
+      _clean();
+    } else {
+      return;
+    }
+
+    _cpu.ram[_address+1] = 0xFFFF;
+    _pending_move = MOVE_TICKS;
+  }
+
+  void Reset() {
+    _pending_move = 0;
+  }
+
+  Function _clean;
+  int _pending_move = 0;
+}

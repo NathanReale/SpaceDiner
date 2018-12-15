@@ -19,12 +19,12 @@ const Point DOWN = const Point(0, 1);
 class Board {
   Board() {
     this._board = [
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 1, 1, 1, 1, 0, 1, 1, 1, 0],
-      [0, 2, 2, 1, 1, 2, 2, 1, 1, 0],
-      [0, 2, 2, 1, 1, 2, 2, 1, 1, 0],
-      [0, 1, 1, 1, 1, 0, 1, 1, 1, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+      [0, 2, 2, 1, 1, 2, 2, 1, 1, 1, 0],
+      [0, 2, 2, 1, 1, 2, 2, 1, 1, 1, 0],
+      [0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ];
   }
 
@@ -56,6 +56,10 @@ class Board {
     return _board[p.y][p.x];
   }
 
+  void SetPosition(Point p, int value) {
+    _board[p.y][p.x] = value;
+  }
+
   List<List<int>> _board;
 }
 
@@ -85,6 +89,7 @@ class MopBot extends Bot {
   MopBot(Board b) : super(b) {
     position = new Point(1, 1);
     _computer.RegisterHardware(MotorHardware((Point p) => _move = p));
+    _computer.RegisterHardware(MopHardware(Clean));
   }
 
   void Render(CanvasRenderingContext2D ctx) {
@@ -116,6 +121,12 @@ class MopBot extends Bot {
 
   void Move(Point p) {
     position = position + p;
+  }
+
+  void Clean() {
+    if (_board.GetPosition(position) == 2) {
+      _board.SetPosition(position, 1);
+    }
   }
 
   Point _move = null;
