@@ -171,7 +171,7 @@ class CPU {
       var row = memory.addRow();
       if (i == pc) row.classes.add('active');
       row.addCell().text = i.toRadixString(16);
-      row.addCell().text = ram[i].toRadixString(16);
+      row.addCell().text = ram[i].toRadixString(16).padLeft(4, '0');
     }
 
   }
