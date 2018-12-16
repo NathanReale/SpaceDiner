@@ -8,7 +8,7 @@ import 'board.dart';
 import 'bot.dart';
 
 const int SCALE = 100;
-const int TICK = 1000; // milliseconds
+const int TICK = 100; // milliseconds
 
 const Point NOP = const Point(0, 0);
 const Point LEFT = const Point(-1, 0);
@@ -19,7 +19,9 @@ const Point DOWN = const Point(0, 1);
 class Game {
   Game(CanvasElement canvas_) {
     board = new Board();
-    bot = new MopBot(board);
+    bots = List<Bot>();
+    bots.add(new MopBot(board, Point(1, 2)));
+    bots.add(new MopBot(board, Point(5, 2)));
 
     canvas = canvas_;
     ctx = canvas.getContext('2d');
@@ -34,9 +36,7 @@ class Game {
       lastTick = timestamp;
     } else if (timestamp - lastTick > TICK) {
       lastTick = timestamp;
-      if (!bot.Step()) {
-        finished = true;
-      }
+      bots.forEach((b) { b.Step(); });
     }
 
     Render();
@@ -45,10 +45,7 @@ class Game {
   }
 
   void Step() {
-    if (!bot.Step()) {
-      finished = true;
-    }
-
+    bots.forEach((b) { b.Step(); });
     Render();
   }
 
@@ -59,19 +56,18 @@ class Game {
   void Render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     board.Render(ctx, SCALE);
-    bot.Render(ctx, SCALE);
+    bots.forEach((b) { b.Render(ctx, SCALE); });
 
   }
 
-  void SetProgram(Uint16List program_) {
-    bot = new MopBot(board);
-    bot.LoadProgram(program_);
+  void SetProgram(Uint16List program) {
+    bots.forEach((b) { b.LoadProgram(program); });
     lastTick = 0;
     finished = false;
   }
 
   Board board;
-  MopBot bot;
+  List<Bot> bots;
 
   CanvasElement canvas;
   CanvasRenderingContext2D ctx;
