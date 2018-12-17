@@ -32,6 +32,7 @@ class MopBot extends Bot {
     _position = p;
     _computer.RegisterHardware(MotorHardware((Point p) => _move = p));
     _computer.RegisterHardware(MopHardware(Clean));
+    _computer.RegisterHardware(BatteryHardware(1000));
   }
 
   void Render(CanvasRenderingContext2D ctx, num scale) {

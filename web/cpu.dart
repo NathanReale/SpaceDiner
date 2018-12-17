@@ -151,24 +151,26 @@ class CPU {
     a = b = c  = 0;
   }
 
-  void Render() {
-    DivElement div = querySelector("#memory");
-    div.innerHtml = "<table>"
-        "<thead><tr><th>Register</th><th>Value</th></tr></thead>"
+  // TODO: Only redraw the actual register values instead of the entire table.
+  // TODO: Move this out of the CPU class.
+  void Render(DivElement div) {
+    TableElement reg = div.querySelector(".registers");
+    reg.innerHtml = "<thead><tr><th>Register</th><th>Value</th></tr></thead>"
         "<tbody><tr>"
         "<td>PC</td><td>0x" + pc.toRadixString(16).padLeft(4, '0') +"</td></tr>"
         "<td>SP</td><td>0x" + sp.toRadixString(16).padLeft(4, '0') +"</td></tr>"
         "<td>A</td><td>0x" + a.toRadixString(16).padLeft(4, '0') +"</td></tr>"
         "<td>B</td><td>0x" + b.toRadixString(16).padLeft(4, '0') +"</td></tr>"
         "<td>C</td><td>0x" + c.toRadixString(16).padLeft(4, '0') +"</td></tr>"
-        "</tbody></table>"
-        "<table id='ram'><thead><tr><th>Address</th><th>Value</th></tr></thead>"
-        "<tbody></tbody></table>";
+        "</tbody>";
 
-    TableSectionElement memory = div.querySelector("table#ram tbody");
-    memory.children.clear();
+    TableElement mem = div.querySelector("table.ram");
+    mem.innerHtml = "<thead><tr><th>Address</th><th>Value</th></tr></thead>"
+        "<tbody></tbody>";
+
+    TableSectionElement mem_table = mem.querySelector("tbody");
     for (int i = 0; i < 100; i++) {
-      var row = memory.addRow();
+      var row = mem_table.addRow();
       if (i == pc) row.classes.add('active');
       row.addCell().text = i.toRadixString(16);
       row.addCell().text = ram[i].toRadixString(16).padLeft(4, '0');

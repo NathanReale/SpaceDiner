@@ -1,3 +1,4 @@
+import 'dart:html';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -38,7 +39,20 @@ class Computer {
   }
 
   void Render() {
-    _cpu.Render();
+    DivElement div = querySelector("#memory");
+    div.innerHtml = "<table class='hardware'>" +
+        "<thead><tr><th>Hardware</th><th>Status</th></tr></thead>" +
+        "<tbody></tbody></table>" +
+        "<table class='registers'></table>" +
+        "<table class='ram'></table>";
+    _cpu.Render(div);
+
+    TableSectionElement hw = div.querySelector("table.hardware tbody");
+    for (var h in _hardware) {
+      var row = hw.addRow();
+      row.addCell().text = h.Name();
+      row.addCell().text = h.Status();
+    }
   }
 
   CPU _cpu;
@@ -55,6 +69,9 @@ abstract class Hardware {
 
   void Step();
   void Reset() {}
+
+  String Name();
+  String Status();
 
   CPU _cpu;
   int _address;
@@ -97,6 +114,14 @@ class MotorHardware extends Hardware {
     _pending_move = 0;
   }
 
+  String Name() { return "Motor"; }
+  String Status() {
+    if (_pending_move > 0) {
+      return "Moving";
+    }
+    return "Idle";
+  }
+
   Function _move;
   int _pending_move = 0;
 }
@@ -133,6 +158,40 @@ class MopHardware extends Hardware {
     _pending_move = 0;
   }
 
+  String Name() { return "Mop"; }
+  String Status() {
+    if (_pending_move > 0) {
+      return "Cleaning";
+    }
+    return "Idle";
+  }
+
   Function _clean;
   int _pending_move = 0;
+}
+
+// TODO: Make this actual do something when it runs out.
+class BatteryHardware extends Hardware {
+  BatteryHardware(max_charge) {
+    _max_charge = max_charge;
+    _charge = _max_charge;
+  }
+
+  void Step() {
+    _charge -= 1;
+
+    _cpu.ram[_address] = _charge ~/ _max_charge;
+  }
+
+  void Reset() {
+    _charge = _max_charge;
+  }
+
+  String Name() { return "Battery"; }
+  String Status() {
+    return ((_charge * 100) / _max_charge).toString() + "%";
+  }
+
+  num _max_charge;
+  num _charge;
 }
