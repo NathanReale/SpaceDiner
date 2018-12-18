@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'board.dart';
 import 'computer.dart';
+import 'hardware.dart';
 
 abstract class Bot {
   Bot(Board b) {
