@@ -48,8 +48,14 @@ class MopBot extends Bot {
           scale / 2, 0, 2*pi)
       ..fill();
 
-    // Update registers table.
-    if (active) _computer.Render();
+    if (active) {
+      ctx
+        ..lineWidth = 5
+        ..stroke();
+
+      // Update registers table.
+      _computer.Render();
+    }
   }
 
   bool Step() {

@@ -50,10 +50,14 @@ class Computer {
   void Render() {
     DivElement div = querySelector("#memory");
     div.innerHtml = "<table class='hardware'>" +
-        "<thead><tr><th>Hardware</th><th>Status</th></tr></thead>" +
-        "<tbody></tbody></table>" +
+          "<thead><tr><th>Hardware</th><th>Status</th></tr></thead>" +
+          "<tbody></tbody>" +
+        "</table>" +
         "<table class='registers'></table>" +
-        "<table class='ram'></table>";
+        "<table class='ram'>" +
+          "<thead><tr><th>Address</th><th>Value</th></tr></thead>" +
+          "<tbody></tbody>" +
+        "</table>";
     _cpu.Render(div);
 
     TableSectionElement hw = div.querySelector("table.hardware tbody");
@@ -61,6 +65,14 @@ class Computer {
       var row = hw.addRow();
       row.addCell().text = h.Name();
       row.addCell().text = h.Status();
+    }
+
+    TableSectionElement mem = div.querySelector("table.ram tbody");
+    for (int i = 0; i < 100; i++) {
+      var row = mem.addRow();
+      if (i == _cpu.pc) row.classes.add('active');
+      row.addCell().text = i.toRadixString(16);
+      row.addCell().text = _cpu.ram[i].toRadixString(16).padLeft(4, '0');
     }
   }
 

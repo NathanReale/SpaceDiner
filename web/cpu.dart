@@ -163,19 +163,6 @@ class CPU {
         "<td>B</td><td>0x" + b.toRadixString(16).padLeft(4, '0') +"</td></tr>"
         "<td>C</td><td>0x" + c.toRadixString(16).padLeft(4, '0') +"</td></tr>"
         "</tbody>";
-
-    TableElement mem = div.querySelector("table.ram");
-    mem.innerHtml = "<thead><tr><th>Address</th><th>Value</th></tr></thead>"
-        "<tbody></tbody>";
-
-    TableSectionElement mem_table = mem.querySelector("tbody");
-    for (int i = 0; i < 100; i++) {
-      var row = mem_table.addRow();
-      if (i == pc) row.classes.add('active');
-      row.addCell().text = i.toRadixString(16);
-      row.addCell().text = ram[i].toRadixString(16).padLeft(4, '0');
-    }
-
   }
 
   // Registers

@@ -27,6 +27,7 @@ class Game {
     ctx = canvas.getContext('2d');
 
     canvas.onClick.listen(Click);
+    canvas.onMouseWheel.listen(Wheel);
   }
 
   Future Run() async {
@@ -57,8 +58,8 @@ class Game {
 
   void Render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    board.Render(ctx, SCALE);
-    bots.forEach((b) { b.Render(ctx, SCALE, b == activeBot); });
+    board.Render(ctx, scale);
+    bots.forEach((b) { b.Render(ctx, scale, b == activeBot); });
 
   }
 
@@ -69,12 +70,18 @@ class Game {
   }
 
   void Click(MouseEvent e) {
-    Point p = Point(e.offset.x ~/ SCALE, e.offset.y ~/ SCALE);
+    Point p = Point(e.offset.x ~/ scale, e.offset.y ~/ scale);
     for (var bot in bots) {
       if (bot.Position() == p) {
         activeBot = bot;
       }
     }
+    Render();
+  }
+
+  void Wheel(WheelEvent e) {
+    scale = (scale + e.deltaY).clamp(10, 100);
+    print(scale);
     Render();
   }
 
@@ -88,6 +95,8 @@ class Game {
 
   num lastTick = 0;
   bool finished = false;
+
+  num scale = 100;
 }
 
 void main() {
