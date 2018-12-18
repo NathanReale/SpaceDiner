@@ -11,7 +11,7 @@ abstract class Bot {
     _computer = Computer();
   }
 
-  void Render(CanvasRenderingContext2D ctx, num scale);
+  void Render(CanvasRenderingContext2D ctx, num scale, bool active);
   bool Step();
 
   Point Position() { return _position; }
@@ -35,7 +35,7 @@ class MopBot extends Bot {
     _computer.RegisterHardware(BatteryHardware(1000));
   }
 
-  void Render(CanvasRenderingContext2D ctx, num scale) {
+  void Render(CanvasRenderingContext2D ctx, num scale, bool active) {
     // Draw the bot on the canvas.
     if (_crash) {
       ctx.setFillColorRgb(255, 0, 0);
@@ -48,11 +48,16 @@ class MopBot extends Bot {
       ..fill();
 
     // Update registers table.
-    _computer.Render();
+    if (active) _computer.Render();
   }
 
   bool Step() {
-    _computer.Step();
+    if (_crash) return false;
+    if (_computer.Step()) {
+      SetCrash(true);
+      return false;
+    }
+
     if (_move != null) {
       Point newPosition = _position + _move;
       if (_board.GetPosition(newPosition) == 0) {

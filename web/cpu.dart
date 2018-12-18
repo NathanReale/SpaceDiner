@@ -8,7 +8,7 @@ class CPU {
   }
 
   void LoadRam(Uint16List ram_) {
-    ram = ram_;
+    ram = Uint16List.fromList(ram_.toList());
   }
 
   int GetValue(int op) {
